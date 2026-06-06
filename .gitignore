@@ -1,0 +1,19 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Excel Reports & Local Data
+*.xlsx
+*.xls
+*.csv
+
+# Operating System Files
+.DS_Store
+Thumbs.db

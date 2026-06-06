@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GST Summary Creator - Premium Tax Dashboard</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Custom Style -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="dark-mode">
+    <div class="glass-bg"></div>
+    <div class="glow-sphere sphere-1"></div>
+    <div class="glow-sphere sphere-2"></div>
+
+    <div class="app-container">
+        <!-- Dashboard Header -->
+        <header class="app-header">
+            <div class="logo-area">
+                <i class="fa-solid fa-calculator-combined logo-icon"></i>
+                <div class="title-desc">
+                    <h1>GST Summary Creator</h1>
+                    <p>Automate Sales & Purchase reconciliation with native OCR</p>
+                </div>
+            </div>
+            <div class="header-controls">
+                <div class="month-selector">
+                    <label for="report-month"><i class="fa-regular fa-calendar"></i> Month</label>
+                    <input type="text" id="report-month" value="May 2026" placeholder="e.g. May 2026">
+                </div>
+                <button id="theme-toggle" class="btn-icon" title="Toggle Light/Dark Mode">
+                    <i class="fa-solid fa-sun"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Dashboard Layout -->
+        <main class="dashboard-grid">
+            <!-- Left Side: Table & Upload Section -->
+            <section class="main-content-card">
+                <div class="tab-header">
+                    <button class="tab-btn active" data-tab="purchase">
+                        <i class="fa-solid fa-basket-shopping"></i> Purchase Bills
+                    </button>
+                    <button class="tab-btn" data-tab="sales">
+                        <i class="fa-solid fa-file-invoice-dollar"></i> Sales Bills
+                    </button>
+                </div>
+
+                <div class="tab-panels">
+                    <!-- Tab Panel (Reused dynamically for clean state management) -->
+                    <div class="panel-content">
+                        <!-- Dropzone Area -->
+                        <div class="upload-container">
+                            <div class="drop-zone" id="file-dropzone">
+                                <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                                <h3>Drag & Drop Bills Here</h3>
+                                <p>Supports PDFs, JPEGs, PNGs (Multiple Uploads Allowed)</p>
+                                <button class="btn btn-secondary">Select Files</button>
+                                <input type="file" id="file-input" multiple accept=".pdf,.png,.jpg,.jpeg" style="display: none;">
+                            </div>
+                        </div>
+
+                        <!-- Processing Indicator -->
+                        <div id="processing-loader" class="loader-container" style="display: none;">
+                            <div class="spinner"></div>
+                            <p>Extracting invoice details using OCR...</p>
+                        </div>
+
+                        <!-- Bills Datatable -->
+                        <div class="table-container">
+                            <div class="table-actions">
+                                <h3 id="table-title">Purchase Invoices</h3>
+                                <button class="btn btn-secondary btn-sm" id="add-row-btn">
+                                    <i class="fa-solid fa-plus"></i> Add Row
+                                </button>
+                            </div>
+                            <div class="table-wrapper">
+                                <table class="invoice-table" id="datatable">
+                                    <thead>
+                                        <tr>
+                                            <th>Sr No</th>
+                                            <th>Date</th>
+                                            <th>Name of Party</th>
+                                            <th>GST Number</th>
+                                            <th>Invoice Number</th>
+                                            <th>GST Rate (%)</th>
+                                            <th>Taxable Value</th>
+                                            <th>CGST</th>
+                                            <th>SGST</th>
+                                            <th>IGST</th>
+                                            <th>Total Value</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="table-body">
+                                        <!-- Dynamic rows populated by JavaScript -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="total-row">
+                                            <td colspan="6">Total</td>
+                                            <td id="total-taxable">0.00</td>
+                                            <td id="total-cgst">0.00</td>
+                                            <td id="total-sgst">0.00</td>
+                                            <td id="total-igst">0.00</td>
+                                            <td id="total-value">0.00</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right Side: Sticky Summary Card -->
+            <aside class="summary-sidebar">
+                <div class="glass-card summary-card">
+                    <h2><i class="fa-solid fa-chart-pie"></i> GST Summary</h2>
+                    <div class="summary-divider"></div>
+                    
+                    <div class="summary-sec">
+                        <h3>GST on Sales</h3>
+                        <div class="summary-row">
+                            <span>CGST:</span> <span id="summary-sales-cgst">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>SGST:</span> <span id="summary-sales-sgst">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>IGST:</span> <span id="summary-sales-igst">₹0.00</span>
+                        </div>
+                        <div class="summary-row total-sub">
+                            <span>Total Sales GST:</span> <span id="summary-sales-total">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-sec">
+                        <h3>Minus GST on Purchase</h3>
+                        <div class="summary-row">
+                            <span>CGST:</span> <span id="summary-pur-cgst">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>SGST:</span> <span id="summary-pur-sgst">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>IGST:</span> <span id="summary-pur-igst">₹0.00</span>
+                        </div>
+                        <div class="summary-row total-sub">
+                            <span>Total Purchase GST:</span> <span id="summary-pur-total">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <div class="summary-divider"></div>
+
+                    <div class="net-payable-box">
+                        <h3>Net GST Payable / Refund</h3>
+                        <div class="summary-row">
+                            <span>CGST:</span> <span id="net-cgst" class="net-amount">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>SGST:</span> <span id="net-sgst" class="net-amount">₹0.00</span>
+                        </div>
+                        <div class="summary-row">
+                            <span>IGST:</span> <span id="net-igst" class="net-amount">₹0.00</span>
+                        </div>
+                        <div class="summary-row total-payable">
+                            <span>Net Total:</span> <span id="net-total">₹0.00</span>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-primary btn-block" id="export-btn">
+                        <i class="fa-solid fa-file-excel"></i> Export Summary Report
+                    </button>
+                </div>
+            </aside>
+        </main>
+        
+        <!-- Dashboard Footer -->
+        <footer class="app-footer">
+            <p>&copy; 2026 GST Summary Creator. All Rights Reserved. | Made with <i class="fa-solid fa-heart" style="color: var(--danger);"></i> by <strong>CA Ankit Gupta</strong></p>
+        </footer>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="toast"></div>
+
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+</body>
+</html>
